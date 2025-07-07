@@ -1,0 +1,37 @@
+name: Call Bedrock (Beta)
+
+on:
+  pull_request:
+
+jobs:
+  call_bedrock:
+    runs-on: ubuntu-latest
+
+    env:
+      S3_BUCKET_BETA: ${{ secrets.S3_BUCKET_BETA }}
+      S3_BUCKET_PROD: ${{ secrets.S3_BUCKET_PROD }}
+      FILENAME: ${{ secrets.FILENAME }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      DEPLOY_ENV: beta
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Install dependencies
+        run: |
+          pip install --upgrade boto3 jinja2
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Call Bedrock (beta)
+        run: |
+          pip install boto3 --upgrade
+          python process_prompt.py
