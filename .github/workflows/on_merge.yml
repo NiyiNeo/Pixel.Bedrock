@@ -37,7 +37,7 @@ jobs:
           echo "FILENAME: $FILENAME"
           echo "AWS_REGION: $AWS_REGION"
 
-      - name: 🚀 Call Bedrock (Prod)
+      - name: Call Bedrock (Prod)
         run: |
           python --version
           pip install --upgrade boto3 jinja2
