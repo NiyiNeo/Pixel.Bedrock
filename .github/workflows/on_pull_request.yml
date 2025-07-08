@@ -33,5 +33,4 @@ jobs:
 
       - name: Call Bedrock (beta)
         run: |
-          pip install boto3 --upgrade
           python process_prompt.py
