@@ -88,8 +88,9 @@ def main():
     output_text = response_body.get('content', [{}])[0].get('text', 'No response.')
 
     # Prepare output filenames
-    html_filename = f"{FILENAME}_{DEPLOY_ENV}_{timestamp}.html"
-    md_filename = f"{FILENAME}_{DEPLOY_ENV}_{timestamp}.md"
+    html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
+    md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
+
 
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
