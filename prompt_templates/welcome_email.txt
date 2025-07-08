@@ -3,8 +3,9 @@ Hello {{ student_name }}
 Congratulations on completing {{ course_module }}!
 
 Here is a quick summary of what you achieved today:
+
 {% for goal in goals %}
-{{ loop.index }}. {{ goal }}
+- {{ goal }}
 {% endfor %}
 
 Excellent Job and we’re excited about your journey with Pixel Learning Company!
