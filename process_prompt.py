@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
-# Bedrock request body
 def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     return {
         "anthropic_version": "bedrock-2023-05-31",
@@ -18,7 +17,7 @@ def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     }
 
 def main():
-    # Load environment variables
+    # Environment variables
     S3_BUCKET_BETA = os.getenv('S3_BUCKET_BETA')
     S3_BUCKET_PROD = os.getenv('S3_BUCKET_PROD')
     DEPLOY_ENV = os.getenv('DEPLOY_ENV', 'beta')
@@ -28,7 +27,6 @@ def main():
     if not FILENAME:
         raise ValueError("FILENAME must be set as an environment variable.")
 
-    # Select target bucket
     S3_BUCKET = S3_BUCKET_BETA if DEPLOY_ENV == 'beta' else S3_BUCKET_PROD
 
     # AWS Clients
@@ -46,12 +44,12 @@ def main():
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    # Load template file 
+    # Load template
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
 
-    # Render Jinja2 template
+    # Render prompt
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
@@ -87,7 +85,7 @@ def main():
 
     print("✅ Files written locally:", html_path, md_path)
 
-    # Upload to S3 with proper Content-Type
+    # Upload to S3 with ContentType
     s3_client.upload_file(
         str(html_path),
         S3_BUCKET,
@@ -105,7 +103,6 @@ def main():
     print(f"✅ Uploaded to S3 bucket `{S3_BUCKET}` in `{DEPLOY_ENV}/outputs/`")
     print(f"📄 HTML: {html_filename}")
     print(f"📄 Markdown: {md_filename}")
-
 
 if __name__ == "__main__":
     main()
