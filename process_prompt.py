@@ -87,22 +87,18 @@ def main():
 
     # Upload to S3 with ContentType
     s3_client.upload_file(
-        str(html_path),
-        S3_BUCKET,
+        str(html_path), S3_BUCKET,
         f"{DEPLOY_ENV}/outputs/{html_filename}",
         ExtraArgs={'ContentType': 'text/html'}
     )
-
     s3_client.upload_file(
-        str(md_path),
-        S3_BUCKET,
+        str(md_path), S3_BUCKET,
         f"{DEPLOY_ENV}/outputs/{md_filename}",
         ExtraArgs={'ContentType': 'text/markdown'}
     )
 
     print(f"✅ Uploaded to S3 bucket `{S3_BUCKET}` in `{DEPLOY_ENV}/outputs/`")
-    print(f"📄 HTML: {html_filename}")
-    print(f"📄 Markdown: {md_filename}")
+    print(f" Visit: http://{S3_BUCKET}.s3-website-{AWS_REGION}.amazonaws.com/{DEPLOY_ENV}/outputs/{html_filename}")
 
 if __name__ == "__main__":
     main()
