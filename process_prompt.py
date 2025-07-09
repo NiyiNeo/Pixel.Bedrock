@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
-#  Construct the Bedrock request body
+# Bedrock request body
 def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     return {
         "anthropic_version": "bedrock-2023-05-31",
@@ -18,48 +18,47 @@ def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     }
 
 def main():
-    # Load environment variables 
+    # Load environment variables
     S3_BUCKET_BETA = os.getenv('S3_BUCKET_BETA')
     S3_BUCKET_PROD = os.getenv('S3_BUCKET_PROD')
-    FILENAME = os.getenv('FILENAME')
     DEPLOY_ENV = os.getenv('DEPLOY_ENV', 'beta')
+    FILENAME = os.getenv('FILENAME')
     AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
 
-    # Validate required variables
-    if not all([S3_BUCKET_BETA, S3_BUCKET_PROD, FILENAME]):
-        raise ValueError("❌ Missing required environment variables: S3_BUCKET_BETA, S3_BUCKET_PROD, or FILENAME.")
+    if not FILENAME:
+        raise ValueError("FILENAME must be set as an environment variable.")
 
-    # Select bucket
+    # Select target bucket
     S3_BUCKET = S3_BUCKET_BETA if DEPLOY_ENV == 'beta' else S3_BUCKET_PROD
 
-    #  AWS clients
+    # AWS Clients
     s3_client = boto3.client('s3', region_name=AWS_REGION)
     bedrock_client = boto3.client('bedrock-runtime', region_name=AWS_REGION)
 
-    #  Define directories
+    # Directories
     prompts_dir = Path('prompts')
     templates_dir = Path('prompt_templates')
     outputs_dir = Path('outputs')
     outputs_dir.mkdir(exist_ok=True)
 
-    # Load prompt data from JSON
+    # Load prompt data
     json_path = prompts_dir / f'{FILENAME}.json'
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    #  Load template file
+    # Load template file 
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
 
-    # ✨ Render the Jinja2 template
+    # Render Jinja2 template
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
     print("✅ Rendered prompt:")
     print(rendered_prompt)
 
-    #  Call Bedrock
+    # Call Bedrock
     request_body = construct_body(rendered_prompt)
     response = bedrock_client.invoke_model(
         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
@@ -88,15 +87,28 @@ def main():
 
     print("✅ Files written locally:", html_path, md_path)
 
-    # Upload to S3
-    s3_client.upload_file(str(html_path), S3_BUCKET, f"{DEPLOY_ENV}/outputs/{html_filename}")
-    s3_client.upload_file(str(md_path), S3_BUCKET, f"{DEPLOY_ENV}/outputs/{md_filename}")
+    # Upload to S3 with proper Content-Type
+    s3_client.upload_file(
+        str(html_path),
+        S3_BUCKET,
+        f"{DEPLOY_ENV}/outputs/{html_filename}",
+        ExtraArgs={'ContentType': 'text/html'}
+    )
+
+    s3_client.upload_file(
+        str(md_path),
+        S3_BUCKET,
+        f"{DEPLOY_ENV}/outputs/{md_filename}",
+        ExtraArgs={'ContentType': 'text/markdown'}
+    )
 
     print(f"✅ Uploaded to S3 bucket `{S3_BUCKET}` in `{DEPLOY_ENV}/outputs/`")
     print(f"📄 HTML: {html_filename}")
     print(f"📄 Markdown: {md_filename}")
 
+
 if __name__ == "__main__":
     main()
+
 
 
