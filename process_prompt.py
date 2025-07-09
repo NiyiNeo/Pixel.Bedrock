@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
-
 def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     return {
         "anthropic_version": "bedrock-2023-05-31",
@@ -16,7 +15,6 @@ def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
             }
         ]
     }
-
 
 def main():
     # Load environment variables
@@ -32,7 +30,7 @@ def main():
     # Select target bucket
     S3_BUCKET = S3_BUCKET_BETA if DEPLOY_ENV == 'beta' else S3_BUCKET_PROD
 
-    # AWS Clients
+    # AWS clients
     s3_client = boto3.client('s3', region_name=AWS_REGION)
     bedrock_client = boto3.client('bedrock-runtime', region_name=AWS_REGION)
 
@@ -42,12 +40,12 @@ def main():
     outputs_dir = Path('outputs')
     outputs_dir.mkdir(exist_ok=True)
 
-    # Load prompt config
+    # Load JSON prompt data
     json_path = prompts_dir / f'{FILENAME}.json'
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    # Load template
+    # Load Jinja2 template
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
@@ -56,9 +54,10 @@ def main():
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
-    print("✅ Rendered prompt:\n", rendered_prompt)
+    print("✅ Rendered prompt:")
+    print(rendered_prompt)
 
-    # Call Bedrock Claude
+    # Call Bedrock
     request_body = construct_body(rendered_prompt)
     response = bedrock_client.invoke_model(
         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
@@ -68,40 +67,46 @@ def main():
     )
 
     response_body = json.loads(response['body'].read())
-    print("✅ Bedrock response:\n", json.dumps(response_body, indent=2))
+    print("✅ Bedrock response:")
+    print(json.dumps(response_body, indent=2))
 
-    completion_text = response_body['content'][0]['text'].strip()
+    completion_text = response_body['content'][0]['text']
 
-    # Prepare output filenames
+    # Wrap the response in valid HTML
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Bedrock Response</title>
+    </head>
+    <body>
+        <h1>Welcome!</h1>
+        <p>{completion_text}</p>
+    </body>
+    </html>
+    """
+
+    # Save outputs
     html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
     md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
 
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
 
-    # Wrap in clean HTML page
-    html_content = f"""<html>
-<head><title>Welcome</title></head>
-<body>
-<p>{completion_text}</p>
-</body>
-</html>"""
-
-    # Save locally
     html_path.write_text(html_content, encoding='utf-8')
     md_path.write_text(completion_text, encoding='utf-8')
 
     print("✅ Files written locally:", html_path, md_path)
 
-    # Upload HTML to bucket root for S3 static hosting
+    # Upload to S3 with correct Content-Type
     s3_client.upload_file(
         str(html_path),
         S3_BUCKET,
-        "welcome_jordan.html",  
+        f"{DEPLOY_ENV}/outputs/{html_filename}",
         ExtraArgs={'ContentType': 'text/html'}
     )
 
-    # Upload MD to structured prefix
     s3_client.upload_file(
         str(md_path),
         S3_BUCKET,
@@ -109,13 +114,13 @@ def main():
         ExtraArgs={'ContentType': 'text/markdown'}
     )
 
-    print(f"✅ Uploaded to S3 bucket `{S3_BUCKET}`:")
-    print(f"📄 HTML (for website): welcome_jordan.html")
-    print(f"📄 Markdown: {DEPLOY_ENV}/outputs/{md_filename}")
-
+    print(f"✅ Uploaded to S3 bucket `{S3_BUCKET}` in `{DEPLOY_ENV}/outputs/`")
+    print(f"📄 HTML: {html_filename}")
+    print(f"📄 Markdown: {md_filename}")
 
 if __name__ == "__main__":
     main()
+
 
 
 
