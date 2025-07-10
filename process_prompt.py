@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
+
 def construct_body(prompt: str, max_tokens: int = 300) -> dict:
     """
     Build the request body for Amazon Bedrock Claude with required Human: prefix.
@@ -16,8 +17,9 @@ def construct_body(prompt: str, max_tokens: int = 300) -> dict:
                 "role": "user",
                 "content": (
                     f"""Human: You are a professional instructor at Pixel Learning Company.
-Your task is to rewrite the following draft email to the student naturally, warmly, and professionally — as if written by a human instructor. 
-Do NOT mention anything about being an AI, model, or assistant. 
+
+Your task is to rewrite the following draft email to the student naturally, warmly, and professionally — as if written by a human instructor.
+Do NOT mention anything about being an AI, model, or assistant.
 Focus only on encouraging the student and clearly communicating the draft content below.
 
 Draft:
@@ -27,6 +29,7 @@ Draft:
             }
         ]
     }
+
 
 def main():
     # Load environment variables
@@ -39,53 +42,53 @@ def main():
     if not FILENAME:
         raise ValueError("FILENAME must be set as an environment variable.")
 
-    # Select target bucket
     S3_BUCKET = S3_BUCKET_BETA if DEPLOY_ENV == 'beta' else S3_BUCKET_PROD
 
     # AWS clients
     s3_client = boto3.client('s3', region_name=AWS_REGION)
     bedrock_client = boto3.client('bedrock-runtime', region_name=AWS_REGION)
 
-    # Directories
+    # Paths
     prompts_dir = Path('prompts')
     templates_dir = Path('prompt_templates')
     outputs_dir = Path('outputs')
     outputs_dir.mkdir(exist_ok=True)
 
-    # Load JSON prompt data
+    # Load JSON
     json_path = prompts_dir / f'{FILENAME}.json'
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
     # Load template
-    template_path = templates_dir / prompt_data['template_file']
+    template_path = templates_dir / 'welcome_email.txt'
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
 
-    # Render Jinja2 template
+    # Render draft prompt
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
-    print("✅ Rendered Prompt:")
+    print("✅ Rendered draft prompt:")
     print(rendered_prompt)
 
-    # Call Bedrock
-    request_body = construct_body(rendered_prompt)
+    # Call Bedrock with refined instructions
+    body = construct_body(rendered_prompt)
+
     response = bedrock_client.invoke_model(
         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
         contentType="application/json",
         accept="application/json",
-        body=json.dumps(request_body)
+        body=json.dumps(body)
     )
 
     response_body = json.loads(response['body'].read())
     print("✅ Bedrock response:")
     print(json.dumps(response_body, indent=2))
 
-    # Extract output text
-    completion_text = response_body['content'][0]['text']
+    # Extract the actual response text
+    final_output = response_body['content'][0]['text'].strip()
 
-    # Save outputs
+    # Write files
     html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
     md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
 
@@ -96,17 +99,17 @@ def main():
     <html>
     <head><title>Welcome</title></head>
     <body>
-    <pre>{completion_text}</pre>
+    <pre>{final_output}</pre>
     </body>
     </html>
-    """.strip()
+    """
 
-    html_path.write_text(html_content, encoding='utf-8')
-    md_path.write_text(completion_text, encoding='utf-8')
+    html_path.write_text(html_content.strip(), encoding='utf-8')
+    md_path.write_text(final_output, encoding='utf-8')
 
     print("✅ Files written locally:", html_path, md_path)
 
-    # Upload to S3 with proper Content-Type
+    # Upload to S3
     s3_client.upload_file(
         str(html_path),
         S3_BUCKET,
@@ -125,8 +128,10 @@ def main():
     print(f"📄 HTML: {html_filename}")
     print(f"📄 Markdown: {md_filename}")
 
+
 if __name__ == "__main__":
     main()
+
 
 
 
