@@ -10,7 +10,8 @@ Deploy Production environment on merge (on_merge.yml).
 View hosted outputs in S3 static website URLs.
 
 **🔧 AWS Setup**
-1️⃣ S3 Buckets
+1️⃣ 
+S3 Buckets
 Create two S3 buckets:
 pixel.br.beta → for Beta environment
 pixel.br.prod → for Production
@@ -21,13 +22,15 @@ Uncheck Block all public access.
 Add this bucket policy (replace your-bucket-name):
 
 
-**2️⃣ IAM**
+**2️⃣ 
+IAM**
 Create an IAM user or role with permissions:
 AmazonS3FullAccess
 AmazonBedrockFullAccess
 Generate AWS access keys for this user.
 
-**3️⃣ Amazon Bedrock**
+**3️⃣ 
+Amazon Bedrock**
 Ensure your AWS account has access to Claude 3 (Sonnet) in Bedrock.
 Check in AWS Console → Bedrock → Models that anthropic.claude-3-sonnet is available in your region (e.g., us-east-1).
 
