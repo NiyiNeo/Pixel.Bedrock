@@ -1,8 +1,8 @@
-****#📄 Pixel Learning AI Email Pipeline****
+****# Pixel Learning AI Email Pipeline****
 This project automates the generation  human-like emails to students using Amazon Bedrock (Claude), GitHub Actions, and S3 Static Website Hosting.
 Emails are rendered from templates & JSON configs, rewritten by Claude via Bedrock, and deployed to S3 buckets (Beta & Prod) as static websites — triggered by GitHub PRs and merges.
 
-**##🚀 Features**
+**##Features**
 Render email drafts with Jinja2 templates & JSON configs.
 Rewrite drafts using Claude in Amazon Bedrock.
 Deploy Beta environment on pull request (on_pull_request.yml).
