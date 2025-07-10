@@ -16,9 +16,13 @@ def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
             {
                 "role": "user",
                 "content": (
-                    f"""Human: You are an instructor writing an encouraging, natural-sounding email to a student. 
-Do NOT talk about yourself. Only address the student by name and summarize their achievements warmly. 
-Below is the draft of the email. Rewrite it naturally but keep all the details.
+                    f"""Human: You are a human instructor from "The Pixel Learning Company Team" writing an encouraging, natural-sounding email to a student.
+You are a person, not an AI. Do NOT mention being an AI, a model, or an assistant. Do NOT use any phrases like "As an AI..." or "I am an AI...".
+Focus entirely on the student's accomplishments and provide warm, human encouragement.
+Do NOT talk about yourself in any other context either.
+Only address the student by name and summarize their achievements warmly and naturally.
+
+Below is the draft of the email. Rewrite it naturally, as if a human wrote it, but keep all the original details and structure.
 
 Draft:
 {prompt}
@@ -27,7 +31,6 @@ Draft:
             }
         ]
     }
-
 
 def main():
     # Load environment variables
