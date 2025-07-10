@@ -27,7 +27,7 @@ def main():
     if not FILENAME:
         raise ValueError("FILENAME must be set as an environment variable.")
 
-    # Select target bucket
+    # Choose the correct bucket
     S3_BUCKET = S3_BUCKET_BETA if DEPLOY_ENV == 'beta' else S3_BUCKET_PROD
 
     # AWS clients
@@ -45,7 +45,7 @@ def main():
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    # Load template
+    # Load template file
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
@@ -54,18 +54,21 @@ def main():
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
-    print("✅ Rendered Prompt:")
+    print("✅ Rendered template with variables:")
     print(rendered_prompt)
 
-    # Build instruction + rendered template
+    # Add improved instruction
     instruction = (
-        "Please take the following email template with the variables already filled in "
-        "and rewrite it naturally and professionally as if you were sending it yourself. "
-        "Do not add anything that is not there. Here is the template:\n\n"
+        "Rewrite the following email naturally and professionally. "
+        "The email is from an instructor to the student mentioned. "
+        "Keep the student’s name, course module, and goals intact, "
+        "but phrase it in a warm and natural tone. "
+        "Do not add anything beyond what is already in the template.\n\n"
     )
+
     full_prompt = instruction + rendered_prompt
 
-    # Call Bedrock
+    # Call Bedrock Claude
     request_body = construct_body(full_prompt)
     response = bedrock_client.invoke_model(
         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
@@ -78,16 +81,17 @@ def main():
     print("✅ Bedrock response:")
     print(json.dumps(response_body, indent=2))
 
-    completion_text = response_body['content'][0]['text']
+    # Extract the generated text
+    completion_text = response_body['content'][0]['text'].strip()
 
-    # Save rendered output
+    # Save outputs
     html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
     md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
 
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
 
-    # Wrap the response in HTML
+    # Wrap in HTML
     html_content = f"""
     <html>
     <head><title>Welcome</title></head>
@@ -123,6 +127,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
 
 
