@@ -4,17 +4,30 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
+
 def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
+    """
+    Construct Bedrock Claude request with clear instructor persona in Human: message.
+    """
     return {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": max_tokens,
         "messages": [
             {
                 "role": "user",
-                "content": prompt
+                "content": (
+                    f"""Human: You are an instructor writing an encouraging, natural-sounding email to a student. 
+Do NOT talk about yourself. Only address the student by name and summarize their achievements warmly. 
+Below is the draft of the email. Rewrite it naturally but keep all the details.
+
+Draft:
+{prompt}
+"""
+                )
             }
         ]
     }
+
 
 def main():
     # Load environment variables
@@ -27,7 +40,7 @@ def main():
     if not FILENAME:
         raise ValueError("FILENAME must be set as an environment variable.")
 
-    # Choose the correct bucket
+    # Select target bucket
     S3_BUCKET = S3_BUCKET_BETA if DEPLOY_ENV == 'beta' else S3_BUCKET_PROD
 
     # AWS clients
@@ -45,7 +58,7 @@ def main():
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    # Load template file
+    # Load template
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
@@ -54,22 +67,11 @@ def main():
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
-    print("✅ Rendered template with variables:")
+    print("✅ Rendered Draft:")
     print(rendered_prompt)
 
-    # Add improved instruction
-    instruction = (
-        "Rewrite the following email naturally and professionally. "
-        "The email is from an instructor to the student mentioned. "
-        "Keep the student’s name, course module, and goals intact, "
-        "but phrase it in a warm and natural tone. "
-        "Do not add anything beyond what is already in the template.\n\n"
-    )
-
-    full_prompt = instruction + rendered_prompt
-
-    # Call Bedrock Claude
-    request_body = construct_body(full_prompt)
+    # Call Bedrock with improved prompt
+    request_body = construct_body(rendered_prompt)
     response = bedrock_client.invoke_model(
         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
         contentType="application/json",
@@ -78,10 +80,10 @@ def main():
     )
 
     response_body = json.loads(response['body'].read())
-    print("✅ Bedrock response:")
+    print("✅ Bedrock Response:")
     print(json.dumps(response_body, indent=2))
 
-    # Extract the generated text
+    # Get Claude’s output
     completion_text = response_body['content'][0]['text'].strip()
 
     # Save outputs
@@ -91,7 +93,7 @@ def main():
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
 
-    # Wrap in HTML
+    # Wrap response in valid HTML
     html_content = f"""
     <html>
     <head><title>Welcome</title></head>
@@ -124,6 +126,7 @@ def main():
     print(f"✅ Uploaded to S3 bucket `{S3_BUCKET}` in `{DEPLOY_ENV}/outputs/`")
     print(f"📄 HTML: {html_filename}")
     print(f"📄 Markdown: {md_filename}")
+
 
 if __name__ == "__main__":
     main()

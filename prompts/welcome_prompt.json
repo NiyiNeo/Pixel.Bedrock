@@ -1,13 +1,13 @@
 {
-    "template_file": "welcome_email.txt",
-    "variables": {
-        "student_name": "Jordan",
-        "course_module": "Module 1: Cloud Fundamentals",
-        "goals": [
-            "Learned the basics of AWS core services",
-            "Completed hands-on labs with S3 and EC2",
-            "Built and deployed your first cloud project"
-        ]
-    }
+  "template_file": "welcome_email.txt",
+  "variables": {
+    "student_name": "Jordan",
+    "course_module": "Module 1: Cloud Fundamentals",
+    "goals": [
+      "Learned the basics of AWS core services",
+      "Completed hands-on labs with S3 and EC2",
+      "Built and deployed your first cloud project"
+    ]
+  }
 }
 
