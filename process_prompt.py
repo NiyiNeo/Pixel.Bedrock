@@ -4,10 +4,9 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
-
 def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     """
-    Construct Bedrock Claude request with clear instructor persona in Human: message.
+    Constructs the Claude Bedrock request body with instructor-to-student prompt
     """
     return {
         "anthropic_version": "bedrock-2023-05-31",
@@ -16,13 +15,18 @@ def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
             {
                 "role": "user",
                 "content": (
-    f"""Human: Rewrite the following email draft in a warm, professional, natural tone as if written by a human instructor at Pixel Learning Company.
+                    f"""Human: You are a human instructor from "The Pixel Learning Company Team" writing an encouraging, natural-sounding email to a student.
+You are a person, not an AI. Do NOT mention being an AI, a model, or an assistant. Do NOT use any phrases like "As an AI..." or "I am an AI...".
+Focus entirely on the student's accomplishments and provide warm, human encouragement.
+Do NOT talk about yourself in any other context either.
+Only address the student by name and summarize their achievements warmly and naturally.
+
+Below is the draft of the email. Rewrite it naturally, as if a human wrote it, but keep all the original details and structure.
 
 Draft:
 {prompt}
 """
-)
-
+                )
             }
         ]
     }
@@ -38,7 +42,7 @@ def main():
     if not FILENAME:
         raise ValueError("FILENAME must be set as an environment variable.")
 
-    # Select target bucket
+    # Select bucket
     S3_BUCKET = S3_BUCKET_BETA if DEPLOY_ENV == 'beta' else S3_BUCKET_PROD
 
     # AWS clients
@@ -51,7 +55,7 @@ def main():
     outputs_dir = Path('outputs')
     outputs_dir.mkdir(exist_ok=True)
 
-    # Load JSON prompt data
+    # Load JSON
     json_path = prompts_dir / f'{FILENAME}.json'
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
@@ -61,14 +65,14 @@ def main():
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
 
-    # Render Jinja2 template
+    # Render template
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
-    print("✅ Rendered Draft:")
+    print("✅ Rendered prompt:")
     print(rendered_prompt)
 
-    # Call Bedrock with improved prompt
+    # Call Bedrock
     request_body = construct_body(rendered_prompt)
     response = bedrock_client.invoke_model(
         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
@@ -78,20 +82,18 @@ def main():
     )
 
     response_body = json.loads(response['body'].read())
-    print("✅ Bedrock Response:")
+    print("✅ Bedrock response:")
     print(json.dumps(response_body, indent=2))
 
-    # Get Claude’s output
-    completion_text = response_body['content'][0]['text'].strip()
+    completion_text = response_body['content'][0]['text']
 
-    # Save outputs
+    # Save files
     html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
     md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
 
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
 
-    # Wrap response in valid HTML
     html_content = f"""
     <html>
     <head><title>Welcome</title></head>
@@ -125,9 +127,9 @@ def main():
     print(f"📄 HTML: {html_filename}")
     print(f"📄 Markdown: {md_filename}")
 
-
 if __name__ == "__main__":
     main()
+
 
 
 
