@@ -7,17 +7,26 @@ from jinja2 import Template
 # Constants
 MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
 
-def construct_body(prompt: str, max_tokens: int = 300) -> dict:
-    """Build the Bedrock request body with minimal Human: prefix."""
+def construct_body(prompt: str) -> dict:
     return {
         "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": max_tokens,
-        "messages": [
-            {
-                "role": "user",
-                "content": f"Human: {prompt}"
-            }
-        ]
+        "max_tokens": 300,
+        "messages": [{
+            "role": "user",
+            "content": f"""Human: Imagine you're a senior instructor at Pixel Learning with 10 years of experience. 
+You're mentoring a new teacher who needs to send this email but wants it to sound more natural.
+
+Please rewrite this draft to be:
+- Warm and encouraging (this student just signed up)
+- Professionally polished but not stiff
+- Clear about next steps
+- About 3-4 short paragraphs max
+
+Draft to improve:
+{prompt}
+
+Assistant: I'd be happy to help refine this! Here's my suggested version that keeps it professional while making it more engaging:"""
+        }]
     }
 
 def main():
