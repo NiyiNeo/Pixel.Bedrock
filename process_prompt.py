@@ -45,16 +45,16 @@ def main():
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    # Load Jinja2 template
+    # Load template
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
 
-    # Render prompt
+    # Render Jinja2 template
     template = Template(template_content)
     rendered_prompt = template.render(**prompt_data['variables'])
 
-    print("✅ Rendered prompt:")
+    print("✅ Rendered Prompt:")
     print(rendered_prompt)
 
     # Call Bedrock
@@ -70,32 +70,25 @@ def main():
     print("✅ Bedrock response:")
     print(json.dumps(response_body, indent=2))
 
-    completion_text = response_body['content'][0]['text']
-
-    # Wrap the response in valid HTML
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Bedrock Response</title>
-    </head>
-    <body>
-        <h1>Welcome!</h1>
-        <p>{completion_text}</p>
-    </body>
-    </html>
-    """
-
-    # Save outputs
+    # Save rendered prpompts
     html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
     md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
 
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
 
-    html_path.write_text(html_content, encoding='utf-8')
-    md_path.write_text(completion_text, encoding='utf-8')
+    # Wrap the response in valid HTML
+    html_content = f"""
+    <html>
+    <head><title>Welcome</title></head>
+    <body>
+    <pre>{rendered_prompt}</pre>
+    </body>
+    </html>
+    """
+    
+    html_path.write_text(html_content.strip(), encoding='utf-8')
+    md_path.write_text(rendered_prompt, encoding='utf-8')
 
     print("✅ Files written locally:", html_path, md_path)
 
