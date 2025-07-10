@@ -1,5 +1,5 @@
 {
-  "template_file": "simple_greeting.txt",
+  "template_file": "welcome_email.txt",
   "variables": {
     "student_name": "Jordan",
     "advantages": [
@@ -8,4 +8,5 @@
     ]
   }
 }
+
 
