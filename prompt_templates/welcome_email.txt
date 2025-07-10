@@ -1,13 +1,11 @@
 Hello {{ student_name }}
-
 Greetings from the Pixel Learning Company.
-
 In your cloud journey, you will learn the following:
-1. {{ goal1 }}
-2. {{ goal2 }}
-3. {{ goal3 }}
-
+1. {{goal1}}
+2. {{goal2}}
+3. {{goal3}}
 We’re excited about your journey with Pixel Learning Company!
+
 
 
 
