@@ -1,13 +1,14 @@
-Hello {{ student_name }},
+Hello {{ student_name }}
 
-Welcome to Pixel Learning Co!
+Greetings from the Pixel Learning Company.
 
-Here are two advantages you gain by learning with us:
-{% for advantage in advantages %}
-- {{ advantage }}
-{% endfor %}
+In your cloud journey, you will learn the following:
+1. {{ goal1 }}
+2. {{ goal2 }}
+3. {{ goal3 }}
 
-We’re excited to help you on your learning journey!
+We’re excited about your journey with Pixel Learning Company!
+
 
 
 
