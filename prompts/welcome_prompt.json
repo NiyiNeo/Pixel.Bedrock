@@ -1,5 +1,5 @@
 {
-  "template_file": "welcome_{{student_name|lower}}.html",
+  "template_file": "welcome_email.txt",
   "variables": {
     "student_name": "Jordan",
     "goal1": "Learned how to launch and configure an EC2 instance",
@@ -7,6 +7,7 @@
     "goal3": "Set up IAM roles and policies for secure access"
   }
 }
+
 
 
 
