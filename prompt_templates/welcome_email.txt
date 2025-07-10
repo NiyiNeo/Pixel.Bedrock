@@ -1,13 +1,13 @@
 Hello {{ student_name }}
-
 Greetings from the Pixel Learning Company.
-
-In your cloud journey, you have accomplished:
+In your cloud journey, you have achieved:
 1. {{ goal1 }}
 2. {{ goal2 }}
 3. {{ goal3 }}
 
-We’re excited to see your continued progress!
+We’re excited about your progress with Pixel Learning Company!
+
+
 
 
 
