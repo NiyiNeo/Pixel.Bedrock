@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
+
 def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     return {
         "anthropic_version": "bedrock-2023-05-31",
@@ -15,6 +16,7 @@ def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
             }
         ]
     }
+
 
 def main():
     # Load environment variables
@@ -45,7 +47,7 @@ def main():
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    # Load template
+    # Load template file
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
@@ -70,25 +72,28 @@ def main():
     print("✅ Bedrock response:")
     print(json.dumps(response_body, indent=2))
 
-    # Save rendered prpompts
+    # Get response text
+    completion_text = response_body['content'][0]['text']
+
+    # Save Bedrock response
     html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
     md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
 
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
 
-    # Wrap the response in valid HTML
+    # Wrap Bedrock response in HTML
     html_content = f"""
     <html>
     <head><title>Welcome</title></head>
     <body>
-    <pre>{rendered_prompt}</pre>
+    <pre>{completion_text}</pre>
     </body>
     </html>
     """
-    
+
     html_path.write_text(html_content.strip(), encoding='utf-8')
-    md_path.write_text(rendered_prompt, encoding='utf-8')
+    md_path.write_text(completion_text, encoding='utf-8')
 
     print("✅ Files written locally:", html_path, md_path)
 
@@ -111,8 +116,10 @@ def main():
     print(f"📄 HTML: {html_filename}")
     print(f"📄 Markdown: {md_filename}")
 
+
 if __name__ == "__main__":
     main()
+
 
 
 
