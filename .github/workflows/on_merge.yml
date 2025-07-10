@@ -10,12 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      S3_BUCKET_BETA: ${{ secrets.S3_BUCKET_BETA }}
       S3_BUCKET_PROD: ${{ secrets.S3_BUCKET_PROD }}
       FILENAME: ${{ secrets.FILENAME }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       DEPLOY_ENV: prod
 
     steps:
@@ -29,8 +26,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # or list them explicitly if no file
+
       - name: Call Bedrock (Prod)
         run: |
-          python --version
-          pip install --upgrade boto3 jinja2
           python process_prompt.py
