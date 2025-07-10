@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from jinja2 import Template
 
-
 def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
     return {
         "anthropic_version": "bedrock-2023-05-31",
@@ -12,11 +11,10 @@ def construct_body(prompt: str, max_tokens: int = 2000) -> dict:
         "messages": [
             {
                 "role": "user",
-                "content": f"Human: {prompt}"
+                "content": prompt
             }
         ]
     }
-
 
 def main():
     # Load environment variables
@@ -47,7 +45,7 @@ def main():
     with open(json_path, 'r', encoding='utf-8') as f:
         prompt_data = json.load(f)
 
-    # Load template file
+    # Load template
     template_path = templates_dir / prompt_data['template_file']
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
@@ -59,8 +57,16 @@ def main():
     print("✅ Rendered Prompt:")
     print(rendered_prompt)
 
+    # Build instruction + rendered template
+    instruction = (
+        "Please take the following email template with the variables already filled in "
+        "and rewrite it naturally and professionally as if you were sending it yourself. "
+        "Do not add anything that is not there. Here is the template:\n\n"
+    )
+    full_prompt = instruction + rendered_prompt
+
     # Call Bedrock
-    request_body = construct_body(rendered_prompt)
+    request_body = construct_body(full_prompt)
     response = bedrock_client.invoke_model(
         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
         contentType="application/json",
@@ -72,17 +78,16 @@ def main():
     print("✅ Bedrock response:")
     print(json.dumps(response_body, indent=2))
 
-    # Get response text
     completion_text = response_body['content'][0]['text']
 
-    # Save Bedrock response
+    # Save rendered output
     html_filename = f"{FILENAME}_{DEPLOY_ENV}.html"
     md_filename = f"{FILENAME}_{DEPLOY_ENV}.md"
 
     html_path = outputs_dir / html_filename
     md_path = outputs_dir / md_filename
 
-    # Wrap Bedrock response in HTML
+    # Wrap the response in HTML
     html_content = f"""
     <html>
     <head><title>Welcome</title></head>
@@ -115,7 +120,6 @@ def main():
     print(f"✅ Uploaded to S3 bucket `{S3_BUCKET}` in `{DEPLOY_ENV}/outputs/`")
     print(f"📄 HTML: {html_filename}")
     print(f"📄 Markdown: {md_filename}")
-
 
 if __name__ == "__main__":
     main()
