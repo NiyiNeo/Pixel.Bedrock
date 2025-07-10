@@ -9,6 +9,7 @@ Deploy Beta environment on pull request (on_pull_request.yml).
 Deploy Production environment on merge (on_merge.yml).
 View hosted outputs in S3 static website URLs.
 
+
 **🔧 AWS Setup**
 S3 Buckets
 Create two S3 buckets:
@@ -19,15 +20,18 @@ Allow public read access:
 Uncheck Block all public access.
 Add this bucket policy (replace your-bucket-name):
 
+
 ***IAM**
 Create an IAM user or role with permissions:
 AmazonS3FullAccess
 AmazonBedrockFullAccess
 Generate AWS access keys for this user.
 
+
 **Amazon Bedrock****
 Ensure your AWS account has access to Claude 3 (Sonnet) in Bedrock.
 Check in AWS Console → Bedrock → Models that anthropic.claude-3-sonnet is available in your region (e.g., us-east-1).
+
 
 **🔑 GitHub Secrets**
 Set the following secrets in your repository settings:
@@ -38,6 +42,7 @@ AWS_REGION	AWS region (e.g., us-east-1)
 S3_BUCKET_BETA	Beta bucket name
 S3_BUCKET_PROD	Production bucket name
 FILENAME	JSON config filename (without .json)
+
 
 **📝 Templates & Configs:**
 Template (prompt_templates/welcome_email.txt)
@@ -53,7 +58,7 @@ Here’s a summary of your achievements:
 Keep up the excellent work!
 
 
-Config 
+**Config** 
 (prompts/welcome_prompt.json)
 {
   "output_file": "welcome_{{student_name|lower}}.html",
@@ -66,6 +71,7 @@ Config
   }
 }
 
+
 **🔄 Workflows**
 Beta Deployment
 Trigger: Pull Request
@@ -76,11 +82,12 @@ Trigger: Merge to main
 Workflow: .github/workflows/on_merge.yml
 Deploys to pixel.br.prod
 
-Each workflow:
+_Each workflow:_
 ✅ Checks out code
 ✅ Configures AWS credentials
 ✅ Installs dependencies (boto3, jinja2)
 ✅ Runs process_prompt.py
+
 
 **🌐 View the Emails**
 Once deployed:
@@ -89,10 +96,12 @@ http://pixel.br.beta.s3-website-us-east-1.amazonaws.com
 Production:
 http://pixel.br.prod.s3-website-us-east-1.amazonaws.com
 
+
 **📄 Notes**
 Ensure FILENAME secret matches your JSON file name (welcome_prompt.json → FILENAME=welcome_prompt).
 Outputs (.html and .md) are saved to outputs/ locally and uploaded to S3.
 Claude rewrites the drafts to sound human, warm, and encouraging.
+
 
 🧪 Contributing
 To update the README:
