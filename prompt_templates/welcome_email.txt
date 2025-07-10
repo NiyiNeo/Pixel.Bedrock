@@ -1,6 +1,12 @@
-Write a warm and professional congratulatory email to {{ student_name }} from Pixel Learning Company for completing {{ course_module }}.  
+Hello {{ student_name }},
 
-Start the email by greeting {{ student_name }} with “Hello {{ student_name }}”.  
+Welcome to Pixel Learning Co!
 
-Mention their progress, encourage them to keep going, and include two advantages of learning with Pixel Learning Company, such as hands-on labs and personalized support.  
+Here are two advantages you gain by learning with us:
+{% for advantage in advantages %}
+- {{ advantage }}
+{% endfor %}
+
+We’re excited to help you on your learning journey!
+
 

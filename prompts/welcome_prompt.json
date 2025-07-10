@@ -1,8 +1,11 @@
 {
-  "template_file": "welcome_email.txt",
+  "template_file": "simple_greeting.txt",
   "variables": {
     "student_name": "Jordan",
-    "course_module": "Module 1: Cloud Fundamentals"
+    "advantages": [
+      "Personalized support from experienced instructors",
+      "Hands-on projects to build real-world skills"
+    ]
   }
 }
 
